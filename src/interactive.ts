@@ -21,7 +21,7 @@ export function formatSettingsSummary(config: SavedConfig): string {
     `  log lookback: ${config.days ?? 7} days`,
     `  Supabase access token: ${config.accessToken ? "provided" : "not set"}`,
     `  LLM command: ${config.llmCommand ?? "not set"}`,
-  ].join("\\n");
+  ].join("\n");
 }
 
 export async function resolveInteractiveConfig(env: Record<string, string | undefined> = process.env, prompts: InteractivePrompts = defaults, path = defaultConfigPath()): Promise<{ config: ResolvedConfig; withLogs: boolean; days: number }> {

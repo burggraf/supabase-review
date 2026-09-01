@@ -19,6 +19,8 @@ test("prompts for missing values and saves them only after consent", async () =>
 test("summarizes exactly what the saved settings contain without exposing secrets", () => {
   const summary = formatSettingsSummary({ databaseUrl: "postgres://user:secret@db.example.com/postgres", projectRef: "project", accessToken: "sbp_secret", llmCommand: "pi-high.sh", withLogs: true, days: 7 });
   expect(summary).toContain("database host: db.example.com");
+  expect(summary).toContain("\n  project ref:");
+  expect(summary).not.toContain("\\n");
   expect(summary).toContain("project ref: project");
   expect(summary).toContain("hosted logs: yes");
   expect(summary).toContain("log lookback: 7 days");
