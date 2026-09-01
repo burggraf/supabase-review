@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 const MAX_STDOUT = 10 * 1024 * 1024;
 const MAX_STDERR = 4 * 1024;
-const REMOVED_ENV = ["DATABASE_URL", "SUPABASE_ACCESS_TOKEN", "SUPABASE_REVIEW_LLM_COMMAND", "PGPASSWORD", "PGSERVICE", "PGPASSFILE"];
+const REMOVED_ENV = ["DATABASE_URL", "TEST_DATABASE_URL", "SUPABASE_ACCESS_TOKEN", "SUPABASE_REVIEW_LLM_COMMAND", "PGPASSWORD", "PGSERVICE", "PGPASSFILE"];
 
 export interface CommandResult { stdout: string; stderr: string; }
 export interface CommandOptions { platform?: NodeJS.Platform; env?: Record<string, string | undefined>; timeoutMs?: number; spawn?: typeof Bun.spawn; }
@@ -51,12 +51,13 @@ export async function runLlmCommand(command: string, prompt: string, options: Co
     await child.stdin.write(prompt);
     child.stdin.end();
     const output = Promise.all([readLimited(child.stdout, MAX_STDOUT), readLimited(child.stderr, MAX_STDERR)]);
-    const exit = child.exited.then((code) => { if (code !== 0) throw new Error(`LLM command exited with code ${code}`); return output; });
     const timeout = options.timeoutMs === undefined ? undefined : new Promise<never>((_, reject) => {
       timer = setTimeout(() => { child.kill(); reject(new Error(`LLM command timed out after ${options.timeoutMs} ms`)); }, options.timeoutMs);
     });
-    const result = timeout ? await Promise.race([output, exit, timeout]) : await Promise.race([output, exit]);
-    const [rawStdout, rawStderr] = result;
+    const exit = timeout ? await Promise.race([child.exited, timeout]) : await child.exited;
+    if (typeof exit !== "number") throw new Error("LLM command timed out");
+    if (exit !== 0) throw new Error(`LLM command exited with code ${exit}`);
+    const [rawStdout, rawStderr] = await output;
     const stdout = rawStdout.replace(/[\u001b\u009b][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[-a-zA-Z\d\/#&.:=?%@~_]+)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g, "").trim();
     if (!stdout) throw new Error("LLM command returned empty stdout");
     return { stdout, stderr: rawStderr.replace(/\x1b\[[0-?]*[ -\/]*[@-~]/g, "").slice(0, MAX_STDERR) };

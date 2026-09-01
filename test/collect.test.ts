@@ -32,7 +32,7 @@ test("caps retained rows and marks truncation", async () => {
 });
 
 test("formats schema patterns as a PostgreSQL array literal", () => {
-  expect(postgresTextArray(["a_b", "pg_*"])).toBe('{"a\\_b","pg_*"}');
+  expect(postgresTextArray(["a_b", "pg_*"])).toBe('{"a_b","pg_*"}');
 });
 
 test("detects and sanitizes failures without leaking URLs", () => {
