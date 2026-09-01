@@ -1,0 +1,4 @@
+[
+  {"timestamp":"2026-09-01T00:00:00Z","event_message":"connection notice"},
+  {"timestamp":"bad","event_message":"duration: nope"}
+]

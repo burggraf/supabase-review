@@ -1,0 +1,6 @@
+[
+  {"timestamp":"2026-09-01T00:00:00Z","event_message":"duration: 12.5 ms  Query Text: SELECT * FROM users   WHERE id = 1\n(cost=0.00..1.00 rows=1)\n-> Index Scan using users_pkey"},
+  {"timestamp":1725148860000000,"event_message":"duration: 5 ms Query Text: SELECT * FROM users WHERE id = 1\n(cost=0..1)\n-> Seq Scan"},
+  {"timestamp":"not-a-date","event_message":"duration: 3 ms Query Text: SELECT 1"},
+  {"timestamp":"2026-09-01T00:00:01Z","event_message":"duration: 3 ms"}
+]
