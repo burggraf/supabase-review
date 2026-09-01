@@ -39,6 +39,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   const args = parseCliArgs(argv);
   if (args.help) { console.log(HELP); return 0; }
   if (args.version) { console.log(VERSION); return 0; }
+  if (args.noRedact && args.nonInteractive) throw new Error("--no-redact requires interactive confirmation and is rejected in non-interactive mode");
   if (args.command === "self-test") { await selfTest(); console.log("self-test passed"); return 0; }
   const config = await resolveConfig(args);
   if (args.command === "report") {
