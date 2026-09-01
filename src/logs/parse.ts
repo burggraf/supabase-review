@@ -61,6 +61,7 @@ export function parseSlowLogs(rows: unknown[]): { slowQueries: ParsedSlowQuery[]
     for (const scan of scans) if (!current.scan_types.includes(scan)) current.scan_types.push(scan);
     if (status === "parsed") current.parse_status = "parsed";
   }
+  for (const group of groups.values()) group.scan_types.sort((a, b) => SCAN_TYPES.indexOf(a) - SCAN_TYPES.indexOf(b));
   if (unparsed) warnings.push(`${unparsed} slow-log event(s) were incomplete or unparseable; retained data may be partial.`);
   if (truncated) warnings.push(`Slow-log groups were capped at ${MAX_GROUPS}.`);
   return { slowQueries: [...groups.values()], warnings, truncated };

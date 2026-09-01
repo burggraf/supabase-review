@@ -18,7 +18,15 @@ Windows PowerShell:
 
 ## Quick start
 
-Interactive mode masks database and Supabase secrets:
+Run the executable with no arguments for the guided workflow. It prompts for the database URI, whether to collect hosted logs, log lookback, and the LLM command. At the end it offers to save these settings—including credentials—to `~/.config/supabase-review/config.env` with restrictive permissions. Future bare runs reuse that file without prompting.
+
+```bash
+./supabase-review-darwin-arm64
+```
+
+To avoid saving credentials, decline the save prompt. To use explicit database-only or non-interactive workflows, use the commands below.
+
+Interactive database-only collection:
 
 ```bash
 supabase-review collect
@@ -31,7 +39,7 @@ DATABASE_URL='postgresql://user:password@host/db' \
   supabase-review collect --non-interactive --output ./review
 ```
 
-Environment inputs are `DATABASE_URL`, optional `SUPABASE_PROJECT_REF`, optional `SUPABASE_ACCESS_TOKEN` (only for `--with-logs`), and optional `SUPABASE_REVIEW_LLM_COMMAND`. Credentials are never command-line flags, persisted, or included in evidence.
+Environment inputs are `DATABASE_URL`, optional `SUPABASE_PROJECT_REF`, optional `SUPABASE_ACCESS_TOKEN` (only for `--with-logs`), and optional `SUPABASE_REVIEW_LLM_COMMAND`. Credentials are never command-line flags or included in evidence. If the user explicitly consents during the guided workflow, they may be persisted in the local protected config file; otherwise they remain prompt-only.
 
 Hosted logs are explicit and may incur billable Logs Query usage; retention and plan availability apply:
 

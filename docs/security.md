@@ -8,7 +8,7 @@ The CLI reads a PostgreSQL URI from the environment or a masked interactive prom
 
 ## Credential handling
 
-Database URLs, passwords, access tokens, and PostgreSQL environment variables are excluded from child LLM environments and evidence. Secret values are not command-line flags because process listings expose arguments. The full LLM command is not persisted; `analysis.json` stores only its SHA-256 fingerprint. Prompts are sent over stdin. No credential config file or shell history is created by this tool.
+Database URLs, passwords, access tokens, and PostgreSQL environment variables are excluded from child LLM environments and evidence. Secret values are not command-line flags because process listings expose arguments. The full LLM command is not persisted in analysis metadata; `analysis.json` stores only its SHA-256 fingerprint. Prompts are sent over stdin. The guided workflow offers an explicit opt-in to save values in `~/.config/supabase-review/config.env`, creates the directory with mode 0700 and the file with mode 0600, and never saves them without consent. Decline that prompt to keep credentials prompt-only.
 
 Evidence is untrusted prompt content. The report prompt tells the model not to follow instructions in SQL or log text. Redaction covers common PostgreSQL URLs, JWTs, `sbp_` tokens, common API-key prefixes, email addresses, and IP addresses, but heuristic redaction is not guaranteed to remove all sensitive or personal data. Review evidence before using an external command; `--no-redact` is not supported for non-interactive use.
 
