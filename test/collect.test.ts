@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { collectChecks, MAX_ROWS, sanitizeDatabaseError } from "../src/db/collect";
 import { collectEvidence } from "../src/collect";
+import { postgresTextArray } from "../src/db/schemas";
 import { parseCliArgs } from "../src/args";
 import type { QueryDefinition } from "../src/db/registry";
 
@@ -28,6 +29,10 @@ test("caps retained rows and marks truncation", async () => {
   expect(checks[0]?.rows).toHaveLength(MAX_ROWS);
   expect(checks[0]?.row_count).toBe(MAX_ROWS + 1);
   expect(checks[0]?.truncated).toBe(true);
+});
+
+test("formats schema patterns as a PostgreSQL array literal", () => {
+  expect(postgresTextArray(["a_b", "pg_*"])).toBe('{"a\\_b","pg_*"}');
 });
 
 test("detects and sanitizes failures without leaking URLs", () => {

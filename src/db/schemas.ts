@@ -4,3 +4,7 @@ const INTERNAL_SCHEMAS = [
 
 // LIKE ANY patterns: underscores are escaped and stars become PostgreSQL wildcards.
 export const SCHEMA_PATTERNS = INTERNAL_SCHEMAS.map((pattern) => pattern.replaceAll("_", "\\_").replaceAll("*", "%"));
+
+export function postgresTextArray(values: readonly string[]): string {
+  return `{${values.map((value) => `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`).join(",")}}`;
+}
