@@ -9,6 +9,7 @@ import { createRunDirectory, writeJsonAtomic, writeTextAtomic } from "./io";
 import type { CliArgs } from "./args";
 import type { Evidence } from "./types";
 import { progress } from "./progress";
+import { renderOutputReadme } from "./report/output-readme";
 
 export interface CollectionDependencies {
   database: (url: string) => Promise<DatabaseCollection>;
@@ -62,5 +63,6 @@ export async function collectEvidence(args: CliArgs, config: { databaseUrl: stri
   const outputDir = base ? (await mkdir(base, { recursive: false }).then(() => base)) : await createRunDirectory(process.cwd(), "supabase-review", started);
   await writeJsonAtomic(join(outputDir, "evidence.json"), evidence);
   await writeTextAtomic(join(outputDir, "facts.md"), renderFacts(evidence));
+  await writeTextAtomic(join(outputDir, "README.md"), renderOutputReadme({ reportGenerated: false, pdfMessage: "PDFs will be created if you later generate reports and npx md-to-pdf is available." }));
   return { evidence, outputDir, exitCode: database.allFailed ? 2 : 0 };
 }
