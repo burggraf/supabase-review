@@ -24,6 +24,8 @@ test("summarizes exactly what the saved settings contain without exposing secret
   expect(summary).toContain("project ref: project");
   expect(summary).toContain("hosted logs: yes");
   expect(summary).toContain("log lookback: 7 days");
+  expect(summary).toContain("DATABASE_URL: saved (contains database password)");
+  expect(summary).toContain("SUPABASE_ACCESS_TOKEN: saved");
   expect(summary).toContain("LLM command: pi-high.sh");
   expect(summary).not.toContain("secret");
 });

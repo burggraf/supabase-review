@@ -16,6 +16,8 @@ export function formatSettingsSummary(config: SavedConfig): string {
   return [
     "Settings to save:",
     `  database host: ${host}`,
+    `  DATABASE_URL: ${config.databaseUrl ? "saved (contains database password)" : "not saved"}`,
+    `  SUPABASE_ACCESS_TOKEN: ${config.accessToken ? "saved" : "not saved"}`,
     `  project ref: ${config.projectRef ?? "not set"}`,
     `  hosted logs: ${config.withLogs ? "yes" : "no"}`,
     `  log lookback: ${config.days ?? 7} days`,
