@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { parseCliArgs } from "./args";
 import { resolveConfig } from "./config";
+import { resolveInteractiveConfig } from "./interactive";
 import { collectEvidence } from "./collect";
 import { QUERY_REGISTRY } from "./db/registry";
 import { normalizeJson, writeJsonAtomic, writeTextAtomic } from "./io";
@@ -36,6 +37,13 @@ async function selfTest(): Promise<void> {
 }
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {
+  if (argv.length === 0) {
+    const interactive = await resolveInteractiveConfig();
+    const args = parseCliArgs(["run", "--with-llm", ...(interactive.withLogs ? ["--with-logs"] : []), "--days", String(interactive.days)]);
+    const result = await collectEvidence(args, interactive.config as { databaseUrl: string; projectRef?: string; accessToken?: string });
+    await generateReports(result.evidence, join(result.outputDir, "evidence.json"), interactive.config.llmCommand!, false, true);
+    return result.exitCode;
+  }
   const args = parseCliArgs(argv);
   if (args.help) { console.log(HELP); return 0; }
   if (args.version) { console.log(VERSION); return 0; }
