@@ -1,5 +1,6 @@
 import { SQL } from "bun";
 import { collectChecks, type DatabaseCollection } from "./collect";
+export type { DatabaseCollection } from "./collect";
 import { QUERY_REGISTRY } from "./registry";
 import { postgresTextArray } from "./schemas";
 
@@ -22,7 +23,7 @@ export async function collectDatabase(databaseUrl: string): Promise<DatabaseColl
       const params = definition.params({ databaseName: databaseName ?? "" }).map((value) => Array.isArray(value) ? postgresTextArray(value.map(String)) : value);
       return tx.unsafe(definition.sql, params);
     }), QUERY_REGISTRY);
-    return { checks, databaseName, serverVersion, allFailed: checks.every((check) => check.status === "error") };
+    return { checks, ...(databaseName ? { databaseName } : {}), ...(serverVersion ? { serverVersion } : {}), allFailed: checks.every((check) => check.status === "error") };
   } finally {
     await db.close({ timeout: 5 });
   }

@@ -7,7 +7,7 @@ export interface ConfigPrompts {
 }
 
 export interface ResolvedConfig {
-  databaseUrl?: string;
+  databaseUrl: string | undefined;
   projectRef?: string;
   accessToken?: string;
   llmCommand?: string;
@@ -44,7 +44,7 @@ export async function resolveConfig(args: CliArgs, env: Record<string, string | 
   const databaseUrl = args.nonInteractive ? env.DATABASE_URL : env.DATABASE_URL ?? await prompts.secret("PostgreSQL connection URI:");
   if (!databaseUrl && args.command !== "report") throw new Error("DATABASE_URL is required; provide it in the environment or use interactive mode");
   if (databaseUrl) validateDatabaseUrl(databaseUrl);
-  const projectRef = args.projectRef ?? env.SUPABASE_PROJECT_REF ?? inferProjectRef(databaseUrl);
+  const projectRef = args.projectRef ?? env.SUPABASE_PROJECT_REF ?? (databaseUrl ? inferProjectRef(databaseUrl) : undefined);
   const accessToken = args.withLogs ? (args.nonInteractive ? env.SUPABASE_ACCESS_TOKEN : env.SUPABASE_ACCESS_TOKEN ?? await prompts.secret("Supabase access token (used only for Logs):")) : undefined;
   if (args.withLogs && !accessToken) throw new Error("SUPABASE_ACCESS_TOKEN is required when --with-logs is enabled");
   const llmCommand = args.llmCommand ?? env.SUPABASE_REVIEW_LLM_COMMAND ?? (args.command === "report" && !args.nonInteractive ? await prompts.text("LLM command (reads stdin, writes stdout):") : undefined);

@@ -21,6 +21,6 @@ test("queries are attributed, read-only, and expose expected keys", () => {
     const sql = query.sql.replace(/--.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "").trim();
     expect(sql).toMatch(/^(SELECT|WITH)\b/i);
     expect(sql).not.toMatch(/\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE|TRUNCATE|COPY|CALL|DO)\b/i);
-    expect(query.expectedKeys).toEqual(expected[query.id]);
+    expect(query.expectedKeys).toEqual(expected[query.id]!);
   }
 });

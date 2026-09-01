@@ -4,6 +4,7 @@ import { createLogWindows, type LogWindow } from "./windows";
 export interface LogRow { id?: unknown; timestamp?: unknown; event_message?: unknown }
 export interface LogsResult { rows: LogRow[]; windowsQueried: number; truncated: boolean; start: string; end: string }
 type Sleep = (milliseconds: number) => Promise<void>;
+export type Fetcher = (input: URL | RequestInfo, init?: RequestInit) => Promise<Response>;
 
 function apiError(status: number): Error {
   const messages: Record<number, string> = { 401: "Supabase access token is invalid or expired", 402: "Supabase Logs Query requires an eligible plan or billing configuration", 403: "Token lacks permission for this project or organization" };
@@ -19,7 +20,7 @@ function retryDelay(response: Response): number {
   return Math.max(0, Math.min(60_000, milliseconds));
 }
 
-export async function collectLogs(projectRef: string, accessToken: string, days: number, fetcher: typeof fetch = fetch, sleep: Sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), now = new Date()): Promise<LogsResult> {
+export async function collectLogs(projectRef: string, accessToken: string, days: number, fetcher: Fetcher = globalThis.fetch as Fetcher, sleep: Sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), now = new Date()): Promise<LogsResult> {
   const windows = createLogWindows(days, now);
   const rows: LogRow[] = [];
   for (const window of windows) {
