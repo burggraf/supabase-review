@@ -8,6 +8,7 @@ import { renderFacts } from "./report/facts";
 import { createRunDirectory, writeJsonAtomic, writeTextAtomic } from "./io";
 import type { CliArgs } from "./args";
 import type { Evidence } from "./types";
+import { progress } from "./progress";
 
 export interface CollectionDependencies {
   database: (url: string) => Promise<DatabaseCollection>;
@@ -20,10 +21,12 @@ const defaults: CollectionDependencies = { database: collectDatabase, logs: coll
 export async function collectEvidence(args: CliArgs, config: { databaseUrl: string; projectRef?: string; accessToken?: string }, dependencies: Partial<CollectionDependencies> = {}) {
   const deps = { ...defaults, ...dependencies };
   const started = deps.now();
+  progress("database", "13 checks; usually under 3 minutes, up to about 4 minutes");
   const database = await deps.database(config.databaseUrl);
   const warnings: string[] = [];
   const logs: Evidence["logs"] = { status: "skipped", requested_days: args.days, windows_queried: 0, rows_received: 0, truncated: false, slow_queries: [] };
   if (args.withLogs) {
+    progress("logs", `${args.days}-day windows; up to about 1 minute per window`);
     if (!config.projectRef || !config.accessToken) {
       logs.status = "error";
       logs.error = { message: "Project ref and Supabase access token are required for logs" };
