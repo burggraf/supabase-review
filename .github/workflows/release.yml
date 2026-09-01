@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-x64
+            runner: macos-15-intel
+          - target: darwin-arm64
+            runner: macos-15
+          - target: linux-x64
+            runner: ubuntu-24.04
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+          - target: windows-x64
+            runner: windows-2025
+          - target: windows-arm64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run build --target ${{ matrix.target }}
+      - name: Smoke test (Unix)
+        if: runner.os != 'Windows'
+        run: ./dist/supabase-review-${{ matrix.target }} --version && ./dist/supabase-review-${{ matrix.target }} self-test
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& .\dist\supabase-review-${{ matrix.target }}.exe --version; & .\dist\supabase-review-${{ matrix.target }}.exe self-test'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: dist/supabase-review-${{ matrix.target }}${{ runner.os == 'Windows' && '.exe' || '' }}
+
+  package:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          path: dist
+          merge-multiple: true
+      - name: Create archives and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          mkdir -p package
+          for target in darwin-x64 darwin-arm64 linux-x64 linux-arm64 windows-x64 windows-arm64; do
+            ext=""
+            archive_ext="tar.gz"
+            if [[ "$target" == windows-* ]]; then ext=".exe"; archive_ext="zip"; fi
+            staging="package/staging-$target"
+            mkdir -p "$staging"
+            cp "dist/supabase-review-$target$ext" "$staging/supabase-review$ext"
+            cp LICENSE THIRD_PARTY_NOTICES.md "$staging/"
+            printf '%s\n' "Download the executable for your platform. Beta releases may be unsigned; verify SHA256SUMS." > "$staging/INSTALL.txt"
+            archive="package/supabase-review-v$version-$target.$archive_ext"
+            if [[ "$archive_ext" == zip ]]; then (cd "$staging" && zip -q -r "../../$archive" .); else tar -C "$staging" -czf "$archive" .; fi
+          done
+          (cd package && shasum -a 256 *.tar.gz *.zip > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: package/*.{tar.gz,zip,SHA256SUMS}
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" package/*.tar.gz package/*.zip package/SHA256SUMS --title "$GITHUB_REF_NAME" --generate-notes
