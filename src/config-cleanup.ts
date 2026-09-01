@@ -1,7 +1,7 @@
 import { access, rm } from "node:fs/promises";
 import { promptConfirm } from "./prompts";
 
-export async function offerConfigCleanup(path: string, confirm: (message: string) => Promise<boolean> = promptConfirm, notify: (message: string) => void = console.error): Promise<void> {
+export async function offerConfigCleanup(path: string, confirm: (message: string) => Promise<boolean> = promptConfirm, notify: (message: string) => void = console.log): Promise<void> {
   try { await access(path); } catch { return; }
   notify(`Security warning: saved credentials file exists at ${path}. Leaving credentials on disk is a security risk.`);
   if (await confirm("Delete the saved credentials file now?")) {

@@ -12,6 +12,6 @@ export function formatProgress(step: string, estimate: string): string {
   return `[${number}/5] ${labels[step] ?? step} — ${estimate}.`;
 }
 
-export function progress(step: string, estimate: string): void {
-  console.error(formatProgress(step, estimate));
+export function progress(step: string, estimate: string, notify: (message: string) => void = console.log): void {
+  notify(formatProgress(step, estimate));
 }

@@ -20,7 +20,7 @@ import { offerConfigCleanup } from "./config-cleanup";
 const HELP = `Supabase Performance Review\n\nUsage:\n  supabase-review run [options]\n  supabase-review collect [options]\n  supabase-review report <evidence.json> [options]\n  supabase-review self-test\n\nOptions:\n  --output <directory>  Output directory\n  --days <1-90>        Log lookback (default 7)\n  --with-logs          Collect hosted project logs\n  --with-llm           Generate reports for run\n  --llm-command <cmd>  Command reading stdin and writing stdout\n  --skip-llm-validation\n  --non-interactive\n`;
 
 async function generateReports(evidence: Evidence, evidencePath: string, command: string, skipValidation: boolean, redactionEnabled: boolean): Promise<void> {
-  if (skipValidation) console.error("[3/5] Skipping LLM command validation by request.");
+  if (skipValidation) console.log("[3/5] Skipping LLM command validation by request.");
   else progress("validation", "up to 60 seconds");
   const validated = skipValidation ? false : await validateLlmCommand(command);
   if (!validated) throw new Error("LLM command validation failed; authenticate/test the CLI or rerun with --skip-llm-validation");
@@ -32,7 +32,7 @@ async function generateReports(evidence: Evidence, evidencePath: string, command
   const executive = await runLlmCommand(command, `Create a non-technical executive summary from this report. Do not invent facts. Return Markdown only.\n\n${detailed.stdout}`);
   await writeTextAtomic(join(dirname(evidencePath), "executive-summary.md"), executive.stdout);
   await writeJsonAtomic(join(dirname(evidencePath), "analysis.json"), { schema_version: 1, provider: "external-cli", command_sha256: commandFingerprint(command), command_validated: validated, generated_at: new Date().toISOString(), redaction_enabled: redactionEnabled, detailed_markdown: detailed.stdout, executive_markdown: executive.stdout });
-  console.error("PDF conversion — checking for npx; may download md-to-pdf on first use.");
+  console.log("PDF conversion — checking for npx; may download md-to-pdf on first use.");
   const pdfMessage = await createPdfs(dirname(evidencePath));
   await writeTextAtomic(join(dirname(evidencePath), "README.md"), renderOutputReadme({ reportGenerated: true, pdfMessage }));
 }
