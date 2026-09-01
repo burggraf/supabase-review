@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-x64
+            runner: macos-15-intel
+          - target: darwin-arm64
+            runner: macos-15
+          - target: linux-x64
+            runner: ubuntu-24.04
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+          - target: windows-x64
+            runner: windows-2025
+          - target: windows-arm64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run build --target ${{ matrix.target }}
+      - name: Smoke test (Unix)
+        if: runner.os != 'Windows'
+        run: ./dist/supabase-review-${{ matrix.target }} --version && ./dist/supabase-review-${{ matrix.target }} self-test
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& .\dist\supabase-review-${{ matrix.target }}.exe --version; & .\dist\supabase-review-${{ matrix.target }}.exe self-test'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: supabase-review-${{ matrix.target }}
+          path: dist/supabase-review-${{ matrix.target }}${{ runner.os == 'Windows' && '.exe' || '' }}
