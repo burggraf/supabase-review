@@ -39,8 +39,9 @@ export async function collectLogs(projectRef: string, accessToken: string, days:
     }
     if (!response?.ok) throw apiError(response?.status ?? 500);
     const body: unknown = await response.json();
-    if (!Array.isArray(body)) throw new Error("Supabase Logs API returned an unexpected response; expected a JSON array");
-    rows.push(...body as LogRow[]);
+    const result = Array.isArray(body) ? body : body && typeof body === "object" && Array.isArray((body as { result?: unknown }).result) ? (body as { result: unknown[] }).result : undefined;
+    if (!result) throw new Error("Supabase Logs API returned an unexpected response; expected an array or a result array");
+    rows.push(...result as LogRow[]);
   }
   return { rows, windowsQueried: windows.length, truncated: rows.length > days * 500, start: windows[0]!.start.toISOString(), end: windows.at(-1)!.end.toISOString() };
 }

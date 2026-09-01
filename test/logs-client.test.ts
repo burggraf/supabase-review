@@ -25,6 +25,11 @@ test("requests the supported endpoint and parses rows", async () => {
   expect(result.rows).toHaveLength(1);
 });
 
+test("accepts the live API result wrapper", async () => {
+  const result = await collectLogs("project", "token", 1, async () => new Response(JSON.stringify({ result: [{ id: 1 }], error: null })), undefined, new Date("2026-09-01T00:00:00Z"));
+  expect(result.rows).toEqual([{ id: 1 }]);
+});
+
 test("retries rate limits once and maps auth errors", async () => {
   let attempts = 0;
   const sleeps: number[] = [];
