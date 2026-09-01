@@ -14,6 +14,8 @@ import type { Evidence } from "./types";
 import { progress } from "./progress";
 import { createPdfs } from "./report/pdf";
 import { renderOutputReadme } from "./report/output-readme";
+import { defaultConfigPath } from "./config-store";
+import { offerConfigCleanup } from "./config-cleanup";
 
 const HELP = `Supabase Performance Review\n\nUsage:\n  supabase-review run [options]\n  supabase-review collect [options]\n  supabase-review report <evidence.json> [options]\n  supabase-review self-test\n\nOptions:\n  --output <directory>  Output directory\n  --days <1-90>        Log lookback (default 7)\n  --with-logs          Collect hosted project logs\n  --with-llm           Generate reports for run\n  --llm-command <cmd>  Command reading stdin and writing stdout\n  --skip-llm-validation\n  --non-interactive\n`;
 
@@ -48,11 +50,16 @@ async function selfTest(): Promise<void> {
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   if (argv.length === 0) {
-    const interactive = await resolveInteractiveConfig();
-    const args = parseCliArgs(["run", "--with-llm", ...(interactive.withLogs ? ["--with-logs"] : []), "--days", String(interactive.days)]);
-    const result = await collectEvidence(args, interactive.config as { databaseUrl: string; projectRef?: string; accessToken?: string });
-    await generateReports(result.evidence, join(result.outputDir, "evidence.json"), interactive.config.llmCommand!, false, true);
-    return result.exitCode;
+    const configPath = defaultConfigPath();
+    try {
+      const interactive = await resolveInteractiveConfig();
+      const args = parseCliArgs(["run", "--with-llm", ...(interactive.withLogs ? ["--with-logs"] : []), "--days", String(interactive.days)]);
+      const result = await collectEvidence(args, interactive.config as { databaseUrl: string; projectRef?: string; accessToken?: string });
+      await generateReports(result.evidence, join(result.outputDir, "evidence.json"), interactive.config.llmCommand!, false, true);
+      return result.exitCode;
+    } finally {
+      await offerConfigCleanup(configPath);
+    }
   }
   const args = parseCliArgs(argv);
   if (args.help) { console.log(HELP); return 0; }
