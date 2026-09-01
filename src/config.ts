@@ -7,7 +7,7 @@ export interface ConfigPrompts {
 }
 
 export interface ResolvedConfig {
-  databaseUrl: string;
+  databaseUrl?: string;
   projectRef?: string;
   accessToken?: string;
   llmCommand?: string;
@@ -42,8 +42,8 @@ function validateDatabaseUrl(value: string): string {
 
 export async function resolveConfig(args: CliArgs, env: Record<string, string | undefined> = process.env, prompts: ConfigPrompts = defaultPrompts): Promise<ResolvedConfig> {
   const databaseUrl = args.nonInteractive ? env.DATABASE_URL : env.DATABASE_URL ?? await prompts.secret("PostgreSQL connection URI:");
-  if (!databaseUrl) throw new Error("DATABASE_URL is required; provide it in the environment or use interactive mode");
-  validateDatabaseUrl(databaseUrl);
+  if (!databaseUrl && args.command !== "report") throw new Error("DATABASE_URL is required; provide it in the environment or use interactive mode");
+  if (databaseUrl) validateDatabaseUrl(databaseUrl);
   const projectRef = args.projectRef ?? env.SUPABASE_PROJECT_REF ?? inferProjectRef(databaseUrl);
   const accessToken = args.withLogs ? (args.nonInteractive ? env.SUPABASE_ACCESS_TOKEN : env.SUPABASE_ACCESS_TOKEN ?? await prompts.secret("Supabase access token (used only for Logs):")) : undefined;
   if (args.withLogs && !accessToken) throw new Error("SUPABASE_ACCESS_TOKEN is required when --with-logs is enabled");
